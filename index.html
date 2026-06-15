@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoRose - Geological Data Visualizer</title>
+    <meta name="description" content="Generate high-resolution geological rose diagrams and Igneous QAP Streckeisen ternary plots.">
+    <!-- Google Fonts: Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="index.css">
+</head>
+<body class="theme-basalt">
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-logo">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M12 2v20"></path>
+                    <path d="M2 12h20"></path>
+                    <path d="M16.24 7.76l-8.48 8.48"></path>
+                    <path d="M19.07 4.93l-14.14 14.14"></path>
+                </svg>
+                <div class="logo-text">
+                    <h1>GeoRose Explorer</h1>
+                    <p>Geological Structural & Petrological Analytics</p>
+                </div>
+            </div>
+            <div class="theme-picker">
+                <span class="theme-label">Theme:</span>
+                <button class="theme-btn active" data-theme="basalt" title="Basalt Dark">Basalt</button>
+                <button class="theme-btn" data-theme="magma" title="Magma Glow">Magma</button>
+                <button class="theme-btn" data-theme="emerald" title="Mineral Emerald">Emerald</button>
+                <button class="theme-btn" data-theme="sandstone" title="Sandstone Light">Sandstone</button>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="app-tabs">
+            <button class="tab-link active" data-tab="rose">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M16.24 7.76l-8.48 8.48"></path></svg>
+                <span>Joint & Fracture Rose Diagram</span>
+            </button>
+            <button class="tab-link" data-tab="qap">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 22 22 2 22"></polygon></svg>
+                <span>Igneous QAP Ternary Plotter</span>
+            </button>
+        </nav>
+
+        <!-- ==========================================
+             ROSE DIAGRAM TAB CONTENT
+             ========================================== -->
+        <div id="rose-tab-content" class="tab-content-panel">
+            <!-- Main Layout Grid -->
+            <main class="app-grid">
+                <!-- Left Column: Inputs & Controls -->
+                <section class="controls-column">
+                    <!-- Manual Entry Card -->
+                    <div class="card glass">
+                        <div class="card-header">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                            <h2>Add Measurement</h2>
+                        </div>
+                        <form id="single-entry-form" class="card-body">
+                            <div class="form-row">
+                                <div class="form-group flex-2">
+                                    <label for="strike-input" id="strike-label">Strike (Azimuth: 0-360°)</label>
+                                    <input type="text" id="strike-input" placeholder="e.g. 045 or N45E" required>
+                                    <span class="input-hint">Azimuth (045) or Quadrant (N45E)</span>
+                                </div>
+                                <div class="form-group flex-1">
+                                    <label for="dip-input">Dip (0-90°)</label>
+                                    <input type="number" id="dip-input" min="0" max="90" placeholder="e.g. 30">
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group flex-1">
+                                    <label for="type-input">Feature Type</label>
+                                    <select id="type-input">
+                                        <option value="Joint">Joint / Fracture</option>
+                                        <option value="Fault">Fault Plane</option>
+                                        <option value="Bedding">Bedding Plane</option>
+                                        <option value="Foliation">Foliation</option>
+                                        <option value="Paleocurrent">Paleocurrent</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="form-group flex-1">
+                                    <label for="notes-input">Notes</label>
+                                    <input type="text" id="notes-input" placeholder="e.g. Loc A-1">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary" id="add-btn">Add Measurement</button>
+                        </form>
+                    </div>
+
+                    <!-- Bulk Import Card -->
+                    <div class="card glass">
+                        <div class="card-header">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                            <h2>Bulk Strike Import</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label for="bulk-input">Paste Strike Values</label>
+                                <textarea id="bulk-input" rows="3" placeholder="Paste data (one per line, comma or space separated) e.g.:&#10;045, 052, 235, 120, N30W, S45E"></textarea>
+                                <span class="input-hint">Will auto-parse strike numbers & quadrants. Existing data will be kept.</span>
+                            </div>
+                            <button id="import-btn" class="btn btn-secondary">Import Bulk Data</button>
+                        </div>
+                    </div>
+
+                    <!-- Settings Card -->
+                    <div class="card glass">
+                        <div class="card-header">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                            <h2>Plot Settings</h2>
+                        </div>
+                        <div class="card-body settings-grid">
+                            <div class="form-group">
+                                <label for="bin-size">Bin Size (Sector Interval)</label>
+                                <select id="bin-size">
+                                    <option value="5">5° Sectors</option>
+                                    <option value="10" selected>10° Sectors (Standard)</option>
+                                    <option value="15">15° Sectors</option>
+                                    <option value="20">20° Sectors</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="plot-mode">Measurement Type</label>
+                                <select id="plot-mode">
+                                    <option value="bidirectional" selected>Symmetric / Bidirectional (Joints, Faults)</option>
+                                    <option value="unidirectional">Unidirectional (Flows, Currents, Dip Dir)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="grid-type">Grid Markings</label>
+                                <select id="grid-type">
+                                    <option value="frequency" selected>Frequency (Count)</option>
+                                    <option value="percentage">Percentage (%)</option>
+                                </select>
+                            </div>
+                            <div class="form-group flex-row-align">
+                                <label for="mean-vector-toggle">Show Mean Vector</label>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="mean-vector-toggle" checked>
+                                    <label for="mean-vector-toggle"></label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Right Column: Visualization & Stats -->
+                <section class="visualizer-column">
+                    <!-- Diagram Card -->
+                    <div class="card glass main-visualizer-card">
+                        <div class="card-header visualizer-header">
+                            <div class="header-title-row">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83M22 12A10 10 0 0 0 12 2v10z"/></svg>
+                                <h2>Rose Diagram Visualization</h2>
+                            </div>
+                            <div class="visualizer-actions">
+                                <button id="export-svg-btn" class="btn btn-icon" title="Export as SVG">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                                    <span>SVG</span>
+                                </button>
+                                <button id="export-png-btn" class="btn btn-icon" title="Export as PNG">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                                    <span>PNG</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body canvas-wrapper">
+                            <!-- SVG Diagram -->
+                            <div class="svg-container" id="rose-diagram-container">
+                                <!-- SVG will be dynamically generated here -->
+                            </div>
+                            <!-- Tooltip for SVGs -->
+                            <div id="chart-tooltip" class="tooltip hidden"></div>
+                        </div>
+                    </div>
+
+                    <!-- Stats Card -->
+                    <div class="card glass">
+                        <div class="card-header">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                            <h2>Circular Statistics</h2>
+                        </div>
+                        <div class="card-body stats-grid">
+                            <div class="stat-box">
+                                <span class="stat-label">Sample Size (N)</span>
+                                <span class="stat-val" id="stat-n">0</span>
+                            </div>
+                            <div class="stat-box">
+                                <span class="stat-label">Mean Direction (&theta;)</span>
+                                <span class="stat-val" id="stat-mean">-</span>
+                            </div>
+                            <div class="stat-box">
+                                <span class="stat-label">Resultant Vector (R)</span>
+                                <span class="stat-val" id="stat-r">-</span>
+                                <div class="strength-meter-container" title="Resultant Vector Length (0 = uniform, 1 = perfectly parallel)">
+                                    <div class="strength-meter-bar" id="stat-r-bar" style="width: 0%;"></div>
+                                </div>
+                            </div>
+                            <div class="stat-box">
+                                <span class="stat-label">Circular Dispersion (s)</span>
+                                <span class="stat-val" id="stat-sd">-</span>
+                            </div>
+                            <div class="stat-box full-width">
+                                <span class="stat-label">Dominant Fracture Set (Mode)</span>
+                                <span class="stat-val text-accent" id="stat-mode">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+
+            <!-- Data Table Section -->
+            <section class="data-section">
+                <div class="card glass">
+                    <div class="card-header table-header-flex">
+                        <div class="header-left">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line></svg>
+                            <h2>Field Measurement Database</h2>
+                        </div>
+                        <div class="header-actions">
+                            <button id="load-sample-btn" class="btn btn-secondary btn-sm">Load Demo Dataset</button>
+                            <button id="export-csv-btn" class="btn btn-secondary btn-sm">Export CSV</button>
+                            <button id="clear-all-btn" class="btn btn-danger btn-sm">Clear All</button>
+                        </div>
+                    </div>
+                    <div class="card-body table-scroll">
+                        <table class="data-table" id="measurements-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Strike (Raw Input)</th>
+                                    <th>Strike (Azimuth)</th>
+                                    <th>Strike (Quadrant)</th>
+                                    <th>Dip Angle</th>
+                                    <th>Feature Type</th>
+                                    <th>Notes</th>
+                                    <th class="actions-col">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="measurements-body">
+                                <tr>
+                                    <td colspan="8" class="empty-table-msg">No data available. Add measurements above or load the demo dataset to begin.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+
+        <!-- ==========================================
+             QAP TERNARY PLOTTER TAB CONTENT
+             ========================================== -->
+        <div id="qap-tab-content" class="tab-content-panel hidden">
+            <!-- Main Layout Grid -->
+            <main class="app-grid">
+                <!-- Left Column: Inputs & Controls -->
+                <section class="controls-column">
+                    <!-- Manual Entry Card -->
+                    <div class="card glass">
+                        <div class="card-header">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                            <h2>Add Igneous Sample</h2>
+                        </div>
+                        <form id="qap-entry-form" class="card-body">
+                            <div class="form-group" style="margin-bottom: 12px;">
+                                <label for="qap-name-input">Sample Name / ID</label>
+                                <input type="text" id="qap-name-input" placeholder="e.g. S-101" required>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="q-input" class="mineral-q-label">Quartz (Q)</label>
+                                    <input type="number" id="q-input" step="any" min="0" placeholder="e.g. 35" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="a-input" class="mineral-a-label">Alkali Feld. (A)</label>
+                                    <input type="number" id="a-input" step="any" min="0" placeholder="e.g. 45" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="p-input" class="mineral-p-label">Plagioclase (P)</label>
+                                    <input type="number" id="p-input" step="any" min="0" placeholder="e.g. 20" required>
+                                </div>
+                            </div>
+
+                            <div class="form-row" style="margin-top: -4px;">
+                                <div class="form-group flex-2">
+                                    <label for="qap-notes-input">Field Notes</label>
+                                    <input type="text" id="qap-notes-input" placeholder="e.g. Medium grained granite">
+                                </div>
+                                <div class="form-group flex-1 flex-row-align">
+                                    <label for="qap-raw-toggle" style="font-size: 10px;">Raw weights?</label>
+                                    <div class="toggle-switch">
+                                        <input type="checkbox" id="qap-raw-toggle">
+                                        <label for="qap-raw-toggle"></label>
+                                    </div>
+                                </div>
+                            </div>
+                            <span class="input-hint" style="display: block; margin-bottom: 14px; margin-top: -6px;">
+                                * If "Raw weights" is off, inputs will be validated as percentages (auto-normalized to 100%).
+                            </span>
+
+                            <button type="submit" class="btn btn-primary" id="qap-add-btn">Plot Sample</button>
+                        </form>
+                    </div>
+
+                    <!-- Diagram Guide Info -->
+                    <div class="card glass">
+                        <div class="card-header">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                            <h2>QAP Streckeisen Guide</h2>
+                        </div>
+                        <div class="card-body guide-text">
+                            <p>The **QAP diagram** classifies plutonic rocks using modal ratios of three felsic mineral groups:</p>
+                            <ul>
+                                <li><strong>Q (Quartz)</strong>: Plotted at the top apex.</li>
+                                <li><strong>A (Alkali Feldspar)</strong>: Plotted at the bottom-left corner.</li>
+                                <li><strong>P (Plagioclase)</strong>: Plotted at the bottom-right corner.</li>
+                            </ul>
+                            <p style="margin-top: 8px;">Mafic minerals are ignored. If you have raw mineral volumes or weight percentages, toggle <strong>"Raw weights"</strong>, and the system will normalize them automatically ($Q+A+P=100\%$) before plotting.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Right Column: QAP Ternary Visualization -->
+                <section class="visualizer-column">
+                    <!-- Ternary Diagram Card -->
+                    <div class="card glass main-visualizer-card">
+                        <div class="card-header visualizer-header">
+                            <div class="header-title-row">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 22 22 2 22"></polygon></svg>
+                                <h2>QAP Streckeisen Ternary Plot</h2>
+                            </div>
+                            <div class="visualizer-actions">
+                                <button id="qap-export-svg-btn" class="btn btn-icon" title="Export as SVG">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                                    <span>SVG</span>
+                                </button>
+                                <button id="qap-export-png-btn" class="btn btn-icon" title="Export as PNG">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                                    <span>PNG</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body canvas-wrapper">
+                            <!-- SVG Ternary Diagram -->
+                            <div class="svg-container" id="qap-diagram-container">
+                                <!-- SVG will be dynamically generated here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Statistics Summary Card -->
+                    <div class="card glass">
+                        <div class="card-header">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                            <h2>Rock Composition Summary</h2>
+                        </div>
+                        <div class="card-body stats-grid">
+                            <div class="stat-box">
+                                <span class="stat-label">Total Samples</span>
+                                <span class="stat-val" id="qap-stat-n">0</span>
+                            </div>
+                            <div class="stat-box">
+                                <span class="stat-label">Most Common Rock</span>
+                                <span class="stat-val text-accent" id="qap-stat-dominant">-</span>
+                            </div>
+                            <div class="stat-box full-width">
+                                <span class="stat-label">Classification Breakdown</span>
+                                <div id="qap-breakdown-list" class="breakdown-list-container">
+                                    <span class="empty-list-msg">No samples plotted yet.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+
+            <!-- QAP Table Database Section -->
+            <section class="data-section">
+                <div class="card glass">
+                    <div class="card-header table-header-flex">
+                        <div class="header-left">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line></svg>
+                            <h2>Igneous Rock Samples Database</h2>
+                        </div>
+                        <div class="header-actions">
+                            <button id="qap-load-sample-btn" class="btn btn-secondary btn-sm">Load Igneous Demo Dataset</button>
+                            <button id="qap-export-csv-btn" class="btn btn-secondary btn-sm">Export CSV</button>
+                            <button id="qap-clear-all-btn" class="btn btn-danger btn-sm">Clear All</button>
+                        </div>
+                    </div>
+                    <div class="card-body table-scroll">
+                        <table class="data-table" id="qap-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Sample ID</th>
+                                    <th>Raw Q-A-P</th>
+                                    <th>Normalized (Q / A / P %)</th>
+                                    <th>Plagioclase Ratio (P*)</th>
+                                    <th>Streckeisen Classification</th>
+                                    <th>Field Notes</th>
+                                    <th class="actions-col">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="qap-body">
+                                <tr>
+                                    <td colspan="8" class="empty-table-msg">No rocks analyzed yet. Add compositions above or load the igneous demo dataset.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Footer -->
+        <footer class="app-footer-bar">
+            <p>&copy; 2026 GeoRose Explorer. Designed for Geological Field Analysis.</p>
+        </footer>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
